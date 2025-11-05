@@ -1,0 +1,149 @@
+{
+    "version": "2.0.0",
+    "configurations": [
+        {
+            "name": "Launch",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "reset-and-build",
+            "program": "${env:Godot4}",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "args": [
+                "--path",
+                "${workspaceRoot}"
+            ],
+            "suppressMultipleSessionWarning": true,
+        },
+        {
+            "name": "LaunchRaw",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${env:Godot4}",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "args": [
+                "--path",
+                "${workspaceRoot}"
+            ],
+            "suppressMultipleSessionWarning": true,
+        },
+        {
+            "name": "LaunchDebug",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "C:\\Program Files\\Godot\\GodotDebug\\godot.windows.editor.dev.x86_64.mono.exe",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "args": [
+                "--path",
+                "${workspaceRoot}",
+            ],
+            "suppressMultipleSessionWarning": true,
+        },
+        {
+            "name": "Launch (Select Scene)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${env:Godot4}",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "args": [
+                "--path",
+                "${workspaceRoot}",
+                "${command:godot.csharp.getLaunchScene}"
+            ]
+        },
+        {
+            "name": "Launch Editor",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${env:Godot4}",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "args": [
+                "--path",
+                "${workspaceRoot}",
+                "--editor"
+            ]
+        },
+        {
+            "name": "Launch Current Scene",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${env:Godot4}",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "args": [
+                "--path",
+                "${workspaceRoot}",
+                "${relativeFile}"
+            ],
+            "suppressMultipleSessionWarning": true,
+        },
+        {
+            "name": "Launch Test",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${env:Godot4}",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "args": [
+                "--path",
+                "${workspaceRoot}",
+                "tests/TestScene.tscn"
+            ],
+            "suppressMultipleSessionWarning": true,
+        },
+        {
+            "name": "Attach to Process",
+            "type": "coreclr",
+            "request": "attach"
+        },
+        {
+            "name": "Launch (Client with Custom User Dir)",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${env:Godot4}",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "args": [
+                "--path",
+                "${workspaceRoot}",
+                "--client-mode"
+            ],
+            "suppressMultipleSessionWarning": true,
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Launches!",
+            "preLaunchTask": "reset-and-build",
+            "configurations": [
+                "LaunchRaw",
+                "LaunchRaw"
+            ],
+        },
+        {
+            "name": "Launches! (Separate Dirs)",
+            "preLaunchTask": "reset-and-build",
+            "configurations": [
+                "LaunchRaw",
+                "Launch (Client with Custom User Dir)"
+            ],
+        }
+    ]
+}

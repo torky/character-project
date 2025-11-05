@@ -1,0 +1,101 @@
+[gd_scene load_steps=13 format=3 uid="uid://kkjo6sxdc5dn"]
+
+[ext_resource type="PackedScene" uid="uid://c038hudr5tv6w" path="res://blender/Bean.blend" id="1_glpr6"]
+[ext_resource type="Script" uid="uid://dby1822mldek3" path="res://Character.cs" id="1_pjt0s"]
+[ext_resource type="AnimationNodeBlendSpace2D" uid="uid://cvqcuwg8y5fto" path="res://animations/movement.tres" id="3_wa5vi"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pjt0s"]
+radius = 0.3
+height = 1.5
+
+[sub_resource type="AnimationNodeTimeScale" id="AnimationNodeTimeScale_px5sl"]
+
+[sub_resource type="AnimationNodeBlend2" id="AnimationNodeBlend2_0qfo5"]
+filter_enabled = true
+filters = ["Armature/Skeleton3D:Bone.001", "Armature/Skeleton3D:Bone.003"]
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_wa5vi"]
+animation = &"Attack"
+advance_on_start = true
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_wfnr8"]
+animation = &"Idle"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_wa5vi"]
+xfade_time = 0.5
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_wfnr8"]
+switch_mode = 2
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_wa5vi"]
+states/Attack/node = SubResource("AnimationNodeAnimation_wa5vi")
+states/Attack/position = Vector2(507, 100)
+states/Idle/node = SubResource("AnimationNodeAnimation_wfnr8")
+states/Idle/position = Vector2(364, 107)
+transitions = ["Idle", "Attack", SubResource("AnimationNodeStateMachineTransition_wa5vi"), "Attack", "Idle", SubResource("AnimationNodeStateMachineTransition_wfnr8")]
+
+[sub_resource type="AnimationNodeBlendTree" id="AnimationNodeBlendTree_wfnr8"]
+graph_offset = Vector2(-227.5845, -19.371414)
+nodes/output/position = Vector2(1080, 200)
+nodes/Movement/node = ExtResource("3_wa5vi")
+nodes/Movement/position = Vector2(220, 60)
+nodes/UpperBlend/node = SubResource("AnimationNodeBlend2_0qfo5")
+nodes/UpperBlend/position = Vector2(760, 220)
+nodes/UpperStateMachine/node = SubResource("AnimationNodeStateMachine_wa5vi")
+nodes/UpperStateMachine/position = Vector2(280, 380)
+nodes/MovementScale/node = SubResource("AnimationNodeTimeScale_px5sl")
+nodes/MovementScale/position = Vector2(500, 80)
+node_connections = [&"output", 0, &"UpperBlend", &"UpperBlend", 0, &"MovementScale", &"UpperBlend", 1, &"UpperStateMachine", &"MovementScale", 0, &"Movement"]
+
+[node name="Character" type="RigidBody3D" node_paths=PackedStringArray("groundRaycast", "cameraSide", "cameraVert", "animationTree", "label")]
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
+script = ExtResource("1_pjt0s")
+groundRaycast = NodePath("RayCast3D")
+cameraSide = NodePath("Side")
+cameraVert = NodePath("Side/Vert")
+animationTree = NodePath("AnimationTree")
+label = NodePath("Label3D")
+
+[node name="Bean" parent="." instance=ExtResource("1_glpr6")]
+
+[node name="Skeleton3D" parent="Bean/Armature" index="0"]
+bones/2/rotation = Quaternion(9.0996224e-07, 0.0012422875, 0.9999992, -1.1304357e-09)
+bones/3/rotation = Quaternion(0.0051237475, 1.1920768e-07, 6.1079825e-10, 0.99998695)
+
+[node name="AnimationPlayer" parent="Bean" index="1"]
+active = false
+deterministic = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7367934, 0)
+shape = SubResource("CapsuleShape3D_pjt0s")
+
+[node name="Side" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 0.625, 0)
+
+[node name="Vert" type="Node3D" parent="Side"]
+
+[node name="Camera3D" type="Camera3D" parent="Side/Vert"]
+transform = Transform3D(1, 0, 0, 0, 0.9659259, 0.25881907, 0, -0.25881907, 0.9659259, 0, 1.2160587, 1.8749996)
+current = true
+
+[node name="RayCast3D" type="RayCast3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0)
+target_position = Vector3(0, -0.225, 0)
+hit_from_inside = true
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+root_node = NodePath("../Bean")
+tree_root = SubResource("AnimationNodeBlendTree_wfnr8")
+anim_player = NodePath("../Bean/AnimationPlayer")
+parameters/Movement/blend_position = Vector2(0, 0.008902073)
+parameters/UpperBlend/blend_amount = 1.0
+parameters/MovementScale/scale = 5.0
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.625, 0)
+
+[editable path="Bean"]
