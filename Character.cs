@@ -1,4 +1,5 @@
 using Godot;
+using Godot.Collections;
 using System;
 
 public partial class Character : RigidBody3D {
@@ -7,7 +8,7 @@ public partial class Character : RigidBody3D {
     public const float MouseRotationSpeed = .002f;
     public const float SmoothFactor = 0.3f;
     public const string movementBlendNodePath = "parameters/Movement/blend_position";
-    public const string stateMachineNodePath = "parameters/UpperStateMachine";
+    public const string stateMachineNodePath = "parameters/UpperStateMachine/playback";
     public const string movementScalePath = "parameters/MovementScale/scale";
 
     [Export] private RayCast3D groundRaycast;
@@ -16,17 +17,36 @@ public partial class Character : RigidBody3D {
     [Export] private AnimationTree animationTree;
     [Export] private Label3D label;
 
+    [Export] private Array<MeshInstance3D> armorMeshes;
+
     private Vector3 intendedVelocity = Vector3.Zero;
     private bool jumpRequested = false;
     private Quaternion targetRotation = Quaternion.Identity;
+    private int armorIndex = 0;
+    private ulong idleTimer = 0;
 
     public override void _Ready() {
         base._Ready();
         targetRotation = GlobalTransform.Basis.GetRotationQuaternion();
+        foreach (var mesh in armorMeshes) {
+            mesh.Visible = false;
+        }
     }
 
     private void SetAnimationState(string stateName) {
+        var pb = animationTree.Get(stateMachineNodePath);
+        var playback = pb.As<AnimationNodeStateMachinePlayback>();
+        if (playback == null) GD.PrintErr("Playback is null: " + pb.GetType());
         animationTree.Get(stateMachineNodePath).As<AnimationNodeStateMachinePlayback>().Travel(stateName);
+    }
+
+    private string GetAnimationState() {
+        var pb = animationTree.Get(stateMachineNodePath);
+        var playback = pb.As<AnimationNodeStateMachinePlayback>();
+        if (playback == null) GD.PrintErr("Playback is null: " + pb.GetType());
+        var travelPath = playback.GetTravelPath();
+        if (travelPath == null || travelPath.Count == 0) return playback.GetCurrentNode();
+        return travelPath[^1];
     }
 
     private void SetMovementScale(float scale) {
@@ -57,6 +77,20 @@ public partial class Character : RigidBody3D {
             RotateCamera(mouseEvent.Relative);
             targetRotation = cameraSide.GlobalTransform.Basis.GetRotationQuaternion();
         }
+
+        if (@event.IsActionPressed("switchArmor")) {
+            var currentArmor = GetCurrentArmorMesh();
+            if (currentArmor != null) currentArmor.Visible = false;
+            armorIndex = (armorIndex + 1) % (armorMeshes.Count + 1);
+            var newArmor = GetCurrentArmorMesh();
+            if (newArmor != null) newArmor.Visible = true;
+        }
+    }
+
+    private MeshInstance3D GetCurrentArmorMesh() {
+        var index = armorIndex - 1;
+        if (index < 0) return null;
+        return armorMeshes[index];
     }
 
     bool IsOnGround() {
@@ -84,12 +118,45 @@ public partial class Character : RigidBody3D {
         GlobalTransform = new Transform3D(basis, GlobalTransform.Origin);
 
         var localVelocity = GlobalTransform.Inverse().Basis * LinearVelocity;
+        localVelocity = new Vector3(localVelocity.X, 0, -localVelocity.Z);
+        if (localVelocity.IsZeroApprox()) {
+            if (idleTimer == 0) {
+                idleTimer = Time.GetTicksMsec();
+            } else if (Time.GetTicksMsec() - idleTimer > 3000) {
+                if (!GetAnimationState().Equals("Idle")) SetAnimationState("Idle");
+            }
+        } else {
+            idleTimer = 0;
+            if (GetAnimationState().Equals("Idle")) {
+                SetAnimationState("Stand");
+            }
+        }
+
         SetMovementDirection(localVelocity);
+        if (localVelocity.X > 0 && localVelocity.Z > 0) {
+            label.Text = "Diagonal Right";
+        } else if (localVelocity.X < 0 && localVelocity.Z > 0) {
+            label.Text = "Diagonal Left";
+        } else if (localVelocity.X > 0 && localVelocity.Z < 0) {
+            label.Text = "Diagonal Back Right";
+        } else if (localVelocity.X < 0 && localVelocity.Z < 0) {
+            label.Text = "Diagonal Back Left";
+        } else if (localVelocity.X > 0) {
+            label.Text = "Right";
+        } else if (localVelocity.X < 0) {
+            label.Text = "Left";
+        } else if (localVelocity.Z > 0) {
+            label.Text = "Forward";
+        } else if (localVelocity.Z < 0) {
+            label.Text = "Back";
+        } else {
+            label.Text = "Idle";
+        }
+
         var lerp = Mathf.Lerp(1, Speed, localVelocity.Length() / Speed);
         SetMovementScale(lerp);
-        label.Text = $"Velocity: {localVelocity}";
-        DebugDraw.Line(label.GlobalPosition, label.GlobalPosition + LinearVelocity.Normalized(), Colors.Red);
         DebugDraw.Line(label.GlobalPosition, label.GlobalPosition + localVelocity, Colors.Blue);
+        DebugDraw.Line(label.GlobalPosition, label.GlobalPosition + Vector3.Forward, Colors.Red);
 
         cameraSide.GlobalTransform = new Transform3D(new Basis(currentCameraRotation), cameraSide.GlobalTransform.Origin);
     }

@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://kkjo6sxdc5dn"]
+[gd_scene load_steps=16 format=3 uid="uid://kkjo6sxdc5dn"]
 
 [ext_resource type="PackedScene" uid="uid://c038hudr5tv6w" path="res://blender/Bean.blend" id="1_glpr6"]
 [ext_resource type="Script" uid="uid://dby1822mldek3" path="res://Character.cs" id="1_pjt0s"]
@@ -21,10 +21,18 @@ advance_on_start = true
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_wfnr8"]
 animation = &"Idle"
 
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_px5sl"]
+animation = &"Stand"
+
 [sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_wa5vi"]
 xfade_time = 0.5
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_wfnr8"]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_px5sl"]
+xfade_time = 0.5
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_0qfo5"]
 switch_mode = 2
 advance_mode = 2
 
@@ -33,7 +41,9 @@ states/Attack/node = SubResource("AnimationNodeAnimation_wa5vi")
 states/Attack/position = Vector2(507, 100)
 states/Idle/node = SubResource("AnimationNodeAnimation_wfnr8")
 states/Idle/position = Vector2(364, 107)
-transitions = ["Idle", "Attack", SubResource("AnimationNodeStateMachineTransition_wa5vi"), "Attack", "Idle", SubResource("AnimationNodeStateMachineTransition_wfnr8")]
+states/Stand/node = SubResource("AnimationNodeAnimation_px5sl")
+states/Stand/position = Vector2(364, 193)
+transitions = ["Idle", "Attack", SubResource("AnimationNodeStateMachineTransition_wa5vi"), "Stand", "Attack", SubResource("AnimationNodeStateMachineTransition_wfnr8"), "Idle", "Stand", SubResource("AnimationNodeStateMachineTransition_px5sl"), "Attack", "Stand", SubResource("AnimationNodeStateMachineTransition_0qfo5")]
 
 [sub_resource type="AnimationNodeBlendTree" id="AnimationNodeBlendTree_wfnr8"]
 graph_offset = Vector2(-227.5845, -19.371414)
@@ -45,10 +55,10 @@ nodes/UpperBlend/position = Vector2(760, 220)
 nodes/UpperStateMachine/node = SubResource("AnimationNodeStateMachine_wa5vi")
 nodes/UpperStateMachine/position = Vector2(280, 380)
 nodes/MovementScale/node = SubResource("AnimationNodeTimeScale_px5sl")
-nodes/MovementScale/position = Vector2(500, 80)
+nodes/MovementScale/position = Vector2(480, 80)
 node_connections = [&"output", 0, &"UpperBlend", &"UpperBlend", 0, &"MovementScale", &"UpperBlend", 1, &"UpperStateMachine", &"MovementScale", 0, &"Movement"]
 
-[node name="Character" type="RigidBody3D" node_paths=PackedStringArray("groundRaycast", "cameraSide", "cameraVert", "animationTree", "label")]
+[node name="Character" type="RigidBody3D" node_paths=PackedStringArray("groundRaycast", "cameraSide", "cameraVert", "animationTree", "label", "armorMeshes")]
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 axis_lock_angular_z = true
@@ -58,12 +68,13 @@ cameraSide = NodePath("Side")
 cameraVert = NodePath("Side/Vert")
 animationTree = NodePath("AnimationTree")
 label = NodePath("Label3D")
+armorMeshes = [NodePath("Bean/Armature/Skeleton3D/CubeArmor"), NodePath("Bean/Armature/Skeleton3D/CubeArmorLight")]
 
 [node name="Bean" parent="." instance=ExtResource("1_glpr6")]
 
 [node name="Skeleton3D" parent="Bean/Armature" index="0"]
-bones/2/rotation = Quaternion(9.0996224e-07, 0.0012422875, 0.9999992, -1.1304357e-09)
-bones/3/rotation = Quaternion(0.0051237475, 1.1920768e-07, 6.1079825e-10, 0.99998695)
+bones/2/rotation = Quaternion(9.075312e-07, 0.07305823, 0.9973277, -6.648028e-08)
+bones/3/rotation = Quaternion(0.29726806, 1.13820235e-07, 3.543715e-08, 0.95479405)
 
 [node name="AnimationPlayer" parent="Bean" index="1"]
 active = false
@@ -91,7 +102,7 @@ hit_from_inside = true
 root_node = NodePath("../Bean")
 tree_root = SubResource("AnimationNodeBlendTree_wfnr8")
 anim_player = NodePath("../Bean/AnimationPlayer")
-parameters/Movement/blend_position = Vector2(0, 0.008902073)
+parameters/Movement/blend_position = Vector2(0, 1)
 parameters/UpperBlend/blend_amount = 1.0
 parameters/MovementScale/scale = 5.0
 
