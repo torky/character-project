@@ -1,12 +1,30 @@
-[gd_scene load_steps=16 format=3 uid="uid://kkjo6sxdc5dn"]
+[gd_scene load_steps=21 format=3 uid="uid://kkjo6sxdc5dn"]
 
 [ext_resource type="PackedScene" uid="uid://c038hudr5tv6w" path="res://blender/Bean.blend" id="1_glpr6"]
 [ext_resource type="Script" uid="uid://dby1822mldek3" path="res://Character.cs" id="1_pjt0s"]
+[ext_resource type="PackedScene" uid="uid://gapcugfpywob" path="res://blender/BasicBow.blend" id="2_wfnr8"]
 [ext_resource type="AnimationNodeBlendSpace2D" uid="uid://cvqcuwg8y5fto" path="res://animations/movement.tres" id="3_wa5vi"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_wa5vi"]
+radius = 0.1
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pjt0s"]
 radius = 0.3
 height = 1.5
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_0qfo5"]
+animation = &"AttackArm"
+
+[sub_resource type="AnimationNodeTransition" id="AnimationNodeTransition_yxww1"]
+allow_transition_to_self = true
+input_0/name = "state_0"
+input_0/auto_advance = false
+input_0/break_loop_at_end = false
+input_0/reset = true
+
+[sub_resource type="AnimationNodeBlend2" id="AnimationNodeBlend2_yxww1"]
+filter_enabled = true
+filters = ["Armature/Skeleton3D:Bone.005.R", "Armature/Skeleton3D:Bone.006.R"]
 
 [sub_resource type="AnimationNodeTimeScale" id="AnimationNodeTimeScale_px5sl"]
 
@@ -46,17 +64,23 @@ states/Stand/position = Vector2(364, 193)
 transitions = ["Idle", "Attack", SubResource("AnimationNodeStateMachineTransition_wa5vi"), "Stand", "Attack", SubResource("AnimationNodeStateMachineTransition_wfnr8"), "Idle", "Stand", SubResource("AnimationNodeStateMachineTransition_px5sl"), "Attack", "Stand", SubResource("AnimationNodeStateMachineTransition_0qfo5")]
 
 [sub_resource type="AnimationNodeBlendTree" id="AnimationNodeBlendTree_wfnr8"]
-graph_offset = Vector2(-227.5845, -19.371414)
+graph_offset = Vector2(-333.59003, 25.078583)
 nodes/output/position = Vector2(1080, 200)
 nodes/Movement/node = ExtResource("3_wa5vi")
 nodes/Movement/position = Vector2(220, 60)
 nodes/UpperBlend/node = SubResource("AnimationNodeBlend2_0qfo5")
-nodes/UpperBlend/position = Vector2(760, 220)
+nodes/UpperBlend/position = Vector2(680, 200)
 nodes/UpperStateMachine/node = SubResource("AnimationNodeStateMachine_wa5vi")
-nodes/UpperStateMachine/position = Vector2(280, 380)
+nodes/UpperStateMachine/position = Vector2(200, 300)
 nodes/MovementScale/node = SubResource("AnimationNodeTimeScale_px5sl")
 nodes/MovementScale/position = Vector2(480, 80)
-node_connections = [&"output", 0, &"UpperBlend", &"UpperBlend", 0, &"MovementScale", &"UpperBlend", 1, &"UpperStateMachine", &"MovementScale", 0, &"Movement"]
+nodes/Blend2/node = SubResource("AnimationNodeBlend2_yxww1")
+nodes/Blend2/position = Vector2(884.27496, 293.05103)
+nodes/ArmState/node = SubResource("AnimationNodeTransition_yxww1")
+nodes/ArmState/position = Vector2(680, 480)
+nodes/Animation/node = SubResource("AnimationNodeAnimation_0qfo5")
+nodes/Animation/position = Vector2(480, 440)
+node_connections = [&"output", 0, &"Blend2", &"UpperBlend", 0, &"MovementScale", &"UpperBlend", 1, &"UpperStateMachine", &"MovementScale", 0, &"Movement", &"Blend2", 0, &"UpperBlend", &"Blend2", 1, &"ArmState", &"ArmState", 0, &"Animation"]
 
 [node name="Character" type="RigidBody3D" node_paths=PackedStringArray("groundRaycast", "cameraSide", "cameraVert", "animationTree", "label", "armorMeshes")]
 axis_lock_angular_x = true
@@ -70,14 +94,50 @@ animationTree = NodePath("AnimationTree")
 label = NodePath("Label3D")
 armorMeshes = [NodePath("Bean/Armature/Skeleton3D/CubeArmor"), NodePath("Bean/Armature/Skeleton3D/CubeArmorLight")]
 
+[node name="BasicBow" parent="." instance=ExtResource("2_wfnr8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0.875, -1.25)
+
+[node name="Skeleton3D" parent="BasicBow/Armature" index="0"]
+bones/19/position = Vector3(-3.9922856e-35, -2.524355e-29, 0.11798981)
+
+[node name="AnimationPlayer" parent="BasicBow" index="1"]
+deterministic = true
+
 [node name="Bean" parent="." instance=ExtResource("1_glpr6")]
 
-[node name="Skeleton3D" parent="Bean/Armature" index="0"]
-bones/2/rotation = Quaternion(9.075312e-07, 0.07305823, 0.9973277, -6.648028e-08)
-bones/3/rotation = Quaternion(0.29726806, 1.13820235e-07, 3.543715e-08, 0.95479405)
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Bean/Armature/Skeleton3D" index="4"]
+transform = Transform3D(0.0285907, -0.99959123, -0.00028984435, -0.47148123, -0.013741186, 0.88176906, -0.8814125, -0.025073726, -0.47168136, -1.2099974, 0.700369, -0.015444518)
+bone_name = "Bone.007.R"
+bone_idx = 4
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Bean/Armature/Skeleton3D/BoneAttachment3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("CapsuleMesh_wa5vi")
+
+[node name="LookAtModifier3D" type="LookAtModifier3D" parent="Bean/Armature/Skeleton3D" index="5"]
+target_node = NodePath("../../../../Side/Vert/Camera3D/Node3D")
+bone_name = "Bone.001"
+bone = 0
+
+[node name="ConvertTransformModifier3D" type="ConvertTransformModifier3D" parent="Bean/Armature/Skeleton3D" index="6"]
+setting_count = 1
+settings/0/amount = 0.0
+settings/0/apply_bone_name = "Bone.005.R"
+settings/0/apply_bone = 2
+settings/0/reference_bone_name = "Bone.001"
+settings/0/reference_bone = 0
+settings/0/apply/transform_mode = 1
+settings/0/apply/axis = 1
+settings/0/apply/range_min = -3.1415927
+settings/0/apply/range_max = 3.1415927
+settings/0/reference/transform_mode = 1
+settings/0/reference/axis = 0
+settings/0/reference/range_min = -3.1415927
+settings/0/reference/range_max = 3.1415927
+settings/0/relative = true
+settings/0/additive = true
 
 [node name="AnimationPlayer" parent="Bean" index="1"]
-active = false
 deterministic = true
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
@@ -88,10 +148,14 @@ shape = SubResource("CapsuleShape3D_pjt0s")
 transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 0.625, 0)
 
 [node name="Vert" type="Node3D" parent="Side"]
+transform = Transform3D(1, 0, 0, 0, 0.86602503, 0.4999998, 0, -0.4999998, 0.86602503, 0, 0, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Side/Vert"]
-transform = Transform3D(1, 0, 0, 0, 0.9659259, 0.25881907, 0, -0.25881907, 0.9659259, 0, 1.2160587, 1.8749996)
+transform = Transform3D(1, 0, 0, 0, 0.9659262, 0.25881913, 0, -0.25881913, 0.9659262, 0, 1.2160587, 1.8749996)
 current = true
+
+[node name="Node3D" type="Marker3D" parent="Side/Vert/Camera3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -3.5)
 
 [node name="RayCast3D" type="RayCast3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0)
@@ -99,14 +163,25 @@ target_position = Vector3(0, -0.225, 0)
 hit_from_inside = true
 
 [node name="AnimationTree" type="AnimationTree" parent="."]
+active = false
 root_node = NodePath("../Bean")
 tree_root = SubResource("AnimationNodeBlendTree_wfnr8")
 anim_player = NodePath("../Bean/AnimationPlayer")
 parameters/Movement/blend_position = Vector2(0, 1)
 parameters/UpperBlend/blend_amount = 1.0
 parameters/MovementScale/scale = 5.0
+parameters/Blend2/blend_amount = 1.0
+parameters/ArmState/current_state = "state_0"
+parameters/ArmState/transition_request = ""
+parameters/ArmState/current_index = 0
 
 [node name="Label3D" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.625, 0)
 
+[node name="MidPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+
+[node name="Back" type="Marker3D" parent="."]
+
+[editable path="BasicBow"]
 [editable path="Bean"]

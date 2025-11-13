@@ -10,6 +10,8 @@ public partial class Character : RigidBody3D {
     public const string movementBlendNodePath = "parameters/Movement/blend_position";
     public const string stateMachineNodePath = "parameters/UpperStateMachine/playback";
     public const string movementScalePath = "parameters/MovementScale/scale";
+    public const string armStatePath = "parameters/ArmState/current_state";
+    public const string armTransitionSetPath = "parameters/ArmState/transition_request";
 
     [Export] private RayCast3D groundRaycast;
     [Export] private Node3D cameraSide;
@@ -31,6 +33,7 @@ public partial class Character : RigidBody3D {
         foreach (var mesh in armorMeshes) {
             mesh.Visible = false;
         }
+        animationTree.Active = true;
     }
 
     private void SetAnimationState(string stateName) {
@@ -38,6 +41,10 @@ public partial class Character : RigidBody3D {
         var playback = pb.As<AnimationNodeStateMachinePlayback>();
         if (playback == null) GD.PrintErr("Playback is null: " + pb.GetType());
         animationTree.Get(stateMachineNodePath).As<AnimationNodeStateMachinePlayback>().Travel(stateName);
+    }
+
+    private void SetArmState() {
+        animationTree.Set(armTransitionSetPath, "state_0");
     }
 
     private string GetAnimationState() {
@@ -70,7 +77,7 @@ public partial class Character : RigidBody3D {
         }
 
         if (@event.IsActionPressed("attack")) {
-            SetAnimationState("Attack");
+            SetArmState();
         }
 
         if (@event is InputEventMouseMotion mouseEvent) {
@@ -99,13 +106,15 @@ public partial class Character : RigidBody3D {
 
     public override void _PhysicsProcess(double delta) {
         base._PhysicsProcess(delta);
+        bool onGround = IsOnGround();
+
         if (!intendedVelocity.IsZeroApprox()) {
             var velocityDiff = intendedVelocity - (LinearVelocity - new Vector3(0, LinearVelocity.Y, 0));
             ApplyCentralImpulse(velocityDiff.LimitLength(Speed) * Mass);
             intendedVelocity = Vector3.Zero;
         }
 
-        if (jumpRequested && IsOnGround()) {
+        if (jumpRequested && onGround) {
             ApplyCentralImpulse(new Vector3(0, JumpImpulse * Mass, 0));
             jumpRequested = false;
         }
@@ -123,7 +132,7 @@ public partial class Character : RigidBody3D {
             if (idleTimer == 0) {
                 idleTimer = Time.GetTicksMsec();
             } else if (Time.GetTicksMsec() - idleTimer > 3000) {
-                if (!GetAnimationState().Equals("Idle")) SetAnimationState("Idle");
+                if (GetAnimationState().Equals("Stand")) SetAnimationState("Idle");
             }
         } else {
             idleTimer = 0;
